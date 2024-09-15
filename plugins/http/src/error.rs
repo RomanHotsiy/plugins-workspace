@@ -41,6 +41,8 @@ pub enum Error {
     Tauri(#[from] tauri::Error),
     #[error(transparent)]
     Utf8(#[from] std::string::FromUtf8Error),
+    #[error("TLS error: {0}")]
+    TlsError(String),
 }
 
 impl Serialize for Error {

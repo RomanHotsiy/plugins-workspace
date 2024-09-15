@@ -84,6 +84,14 @@ export interface ClientOptions {
    * Configuration of a proxy that a Client should pass requests to.
    */
   proxy?: Proxy
+  /**
+   * Path to the client certificate file (PEM format)
+   */
+  clientCert?: string
+  /**
+   * Path to the client private key file (PEM format)
+   */
+  clientKey?: string
 }
 
 const ERROR_REQUEST_CANCELLED = 'Request canceled'
@@ -115,12 +123,16 @@ export async function fetch(
   const maxRedirections = init?.maxRedirections
   const connectTimeout = init?.connectTimeout
   const proxy = init?.proxy
+  const clientCert = init?.clientCert
+  const clientKey = init?.clientKey
 
   // Remove these fields before creating the request
   if (init) {
     delete init.maxRedirections
     delete init.connectTimeout
     delete init.proxy
+    delete init.clientCert
+    delete init.clientKey
   }
 
   const headers = init?.headers
@@ -172,7 +184,9 @@ export async function fetch(
       data,
       maxRedirections,
       connectTimeout,
-      proxy
+      proxy,
+      clientCert,
+      clientKey
     }
   })
 

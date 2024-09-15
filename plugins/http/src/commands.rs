@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc, time::Duration};
+use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc, time::Duration, path::PathBuf};
 
 use http::{header, HeaderName, Method, StatusCode};
 use reqwest::{redirect::Policy, NoProxy};
@@ -85,6 +85,8 @@ pub struct ClientConfig {
     connect_timeout: Option<u64>,
     max_redirections: Option<usize>,
     proxy: Option<Proxy>,
+    client_cert: Option<PathBuf>,
+    client_key: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -181,7 +183,11 @@ pub async fn fetch<R: Runtime>(
         connect_timeout,
         max_redirections,
         proxy,
+        client_cert,
+        client_key,
     } = client_config;
+
+    println!("Message from Rust: client_key: {:?}, client_cert: {:?}", client_key, client_cert);
 
     let scheme = url.scheme();
     let method = Method::from_bytes(method.as_bytes())?;
@@ -221,6 +227,26 @@ pub async fn fetch<R: Runtime>(
                     builder = attach_proxy(proxy_config, builder)?;
                 }
 
+                // Add client certificate and key if provided
+                if let (Some(cert_path), Some(key_path)) = (client_cert.as_ref(), client_key.as_ref()) {
+                    let cert = std::fs::read(cert_path)
+                        .map_err(|e| Error::TlsError(format!("Failed to read certificate file: {}", e)))?;
+                    let key = std::fs::read(key_path)
+                        .map_err(|e| Error::TlsError(format!("Failed to read key file: {}", e)))?;
+
+                    let mut combined = cert.clone();
+                    combined.extend_from_slice(b"\n");
+                    combined.extend_from_slice(&key);
+
+                    let identity = reqwest::Identity::from_pem(&combined)
+                        .map_err(|e| Error::TlsError(format!("Failed to create identity from PEM: {}", e)))?;
+
+                    builder = builder.use_rustls_tls();
+                    builder = builder.identity(identity);
+                } else if client_cert.is_some() || client_key.is_some() {
+                    return Err(Error::TlsError("Both client certificate and key must be provided".into()));
+                }
+
                 #[cfg(feature = "cookies")]
                 {
                     builder = builder.cookie_provider(state.cookies_jar.clone());
@@ -246,7 +272,7 @@ pub async fn fetch<R: Runtime>(
 
                 if headers.contains_key(header::RANGE.as_str()) {
                     // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch step 18
-                    // If httpRequest’s header list contains `Range`, then append (`Accept-Encoding`, `identity`)
+                    // If httpRequest's header list contains `Range`, then append (`Accept-Encoding`, `identity`)
                     request = request.header(header::ACCEPT_ENCODING, "identity");
                 }
 
