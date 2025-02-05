@@ -63,6 +63,12 @@ pub enum Error {
     TempDirNotOnSameMountPoint,
     #[error("binary for the current target not found in the archive")]
     BinaryNotFoundInArchive,
+    #[error("failed to create temporary directory")]
+    TempDirNotFound,
+    #[error("Authentication failed or was cancelled")]
+    AuthenticationFailed,
+    #[error("Failed to install .deb package")]
+    DebInstallFailed,
     #[error("invalid updater binary format")]
     InvalidUpdaterFormat,
     #[error(transparent)]
@@ -71,6 +77,9 @@ pub enum Error {
     InvalidHeaderValue(#[from] http::header::InvalidHeaderValue),
     #[error(transparent)]
     InvalidHeaderName(#[from] http::header::InvalidHeaderName),
+    /// The configured updater endpoint must use a secure protocol like `https`
+    #[error("The configured updater endpoint must use a secure protocol like `https`.")]
+    InsecureTransportProtocol,
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
 }

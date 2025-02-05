@@ -8,7 +8,10 @@ use serde::{Deserialize, Serialize};
 use tauri::{command, Manager, Runtime, State, Window};
 use tauri_plugin_fs::FsExt;
 
-use crate::{Dialog, FileDialogBuilder, FilePath, MessageDialogKind, Result};
+use crate::{
+    Dialog, FileDialogBuilder, FilePath, MessageDialogButtons, MessageDialogKind, Result, CANCEL,
+    NO, OK, YES,
+};
 
 #[derive(Serialize)]
 #[serde(untagged)]
@@ -140,7 +143,7 @@ pub(crate) async fn open<R: Runtime>(
                     for folder in folders {
                         if let Ok(path) = folder.clone().into_path() {
                             if let Some(s) = window.try_fs_scope() {
-                                s.allow_directory(&path, options.recursive);
+                                s.allow_directory(&path, options.recursive)?;
                             }
                             tauri_scope.allow_directory(&path, options.directory)?;
                         }
@@ -154,7 +157,7 @@ pub(crate) async fn open<R: Runtime>(
                 if let Some(folder) = &folder {
                     if let Ok(path) = folder.clone().into_path() {
                         if let Some(s) = window.try_fs_scope() {
-                            s.allow_directory(&path, options.recursive);
+                            s.allow_directory(&path, options.recursive)?;
                         }
                         tauri_scope.allow_directory(&path, options.directory)?;
                     }
@@ -172,7 +175,7 @@ pub(crate) async fn open<R: Runtime>(
             for file in files {
                 if let Ok(path) = file.clone().into_path() {
                     if let Some(s) = window.try_fs_scope() {
-                        s.allow_file(&path);
+                        s.allow_file(&path)?;
                     }
 
                     tauri_scope.allow_file(&path)?;
@@ -187,7 +190,7 @@ pub(crate) async fn open<R: Runtime>(
         if let Some(file) = &file {
             if let Ok(path) = file.clone().into_path() {
                 if let Some(s) = window.try_fs_scope() {
-                    s.allow_file(&path);
+                    s.allow_file(&path)?;
                 }
                 tauri_scope.allow_file(&path)?;
             }
@@ -205,7 +208,7 @@ pub(crate) async fn save<R: Runtime>(
     options: SaveDialogOptions,
 ) -> Result<Option<FilePath>> {
     let mut dialog_builder = dialog.file();
-    #[cfg(any(windows, target_os = "macos"))]
+    #[cfg(desktop)]
     {
         dialog_builder = dialog_builder.set_parent(&window);
     }
@@ -229,7 +232,7 @@ pub(crate) async fn save<R: Runtime>(
     if let Some(p) = &path {
         if let Ok(path) = p.clone().into_path() {
             if let Some(s) = window.try_fs_scope() {
-                s.allow_file(&path);
+                s.allow_file(&path)?;
             }
             tauri_scope.allow_file(&path)?;
         }
@@ -244,30 +247,23 @@ fn message_dialog<R: Runtime>(
     title: Option<String>,
     message: String,
     kind: Option<MessageDialogKind>,
-    ok_button_label: Option<String>,
-    cancel_button_label: Option<String>,
+    buttons: MessageDialogButtons,
 ) -> bool {
     let mut builder = dialog.message(message);
+
+    builder = builder.buttons(buttons);
 
     if let Some(title) = title {
         builder = builder.title(title);
     }
 
-    #[cfg(any(windows, target_os = "macos"))]
+    #[cfg(desktop)]
     {
         builder = builder.parent(&window);
     }
 
     if let Some(kind) = kind {
         builder = builder.kind(kind);
-    }
-
-    if let Some(ok) = ok_button_label {
-        builder = builder.ok_button_label(ok);
-    }
-
-    if let Some(cancel) = cancel_button_label {
-        builder = builder.cancel_button_label(cancel);
     }
 
     builder.blocking_show()
@@ -288,8 +284,11 @@ pub(crate) async fn message<R: Runtime>(
         title,
         message,
         kind,
-        ok_button_label,
-        None,
+        if let Some(ok_button_label) = ok_button_label {
+            MessageDialogButtons::OkCustom(ok_button_label)
+        } else {
+            MessageDialogButtons::Ok
+        },
     ))
 }
 
@@ -300,8 +299,8 @@ pub(crate) async fn ask<R: Runtime>(
     title: Option<String>,
     message: String,
     kind: Option<MessageDialogKind>,
-    ok_button_label: Option<String>,
-    cancel_button_label: Option<String>,
+    yes_button_label: Option<String>,
+    no_button_label: Option<String>,
 ) -> Result<bool> {
     Ok(message_dialog(
         window,
@@ -309,8 +308,16 @@ pub(crate) async fn ask<R: Runtime>(
         title,
         message,
         kind,
-        Some(ok_button_label.unwrap_or_else(|| "Yes".into())),
-        Some(cancel_button_label.unwrap_or_else(|| "No".into())),
+        if let Some(yes_button_label) = yes_button_label {
+            MessageDialogButtons::OkCancelCustom(
+                yes_button_label,
+                no_button_label.unwrap_or(NO.to_string()),
+            )
+        } else if let Some(no_button_label) = no_button_label {
+            MessageDialogButtons::OkCancelCustom(YES.to_string(), no_button_label)
+        } else {
+            MessageDialogButtons::YesNo
+        },
     ))
 }
 
@@ -330,7 +337,15 @@ pub(crate) async fn confirm<R: Runtime>(
         title,
         message,
         kind,
-        Some(ok_button_label.unwrap_or_else(|| "Ok".into())),
-        Some(cancel_button_label.unwrap_or_else(|| "Cancel".into())),
+        if let Some(ok_button_label) = ok_button_label {
+            MessageDialogButtons::OkCancelCustom(
+                ok_button_label,
+                cancel_button_label.unwrap_or(CANCEL.to_string()),
+            )
+        } else if let Some(cancel_button_label) = cancel_button_label {
+            MessageDialogButtons::OkCancelCustom(OK.to_string(), cancel_button_label)
+        } else {
+            MessageDialogButtons::OkCancel
+        },
     ))
 }

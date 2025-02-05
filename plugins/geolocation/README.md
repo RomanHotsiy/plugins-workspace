@@ -2,9 +2,17 @@
 
 This plugin provides APIs for getting and tracking the device's current position, including information about altitude, heading, and speed (if available).
 
+| Platform | Supported |
+| -------- | --------- |
+| Linux    | x         |
+| Windows  | x         |
+| macOS    | x         |
+| Android  | ✓         |
+| iOS      | ✓         |
+
 ## Install
 
-_This plugin requires a Rust version of at least **1.75**_
+_This plugin requires a Rust version of at least **1.77.2**_
 
 There are three general methods of installation that we can recommend.
 
@@ -18,7 +26,7 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-tauri-plugin-geolocation = "2.0.0-rc"
+tauri-plugin-geolocation = "2.0.0"
 # alternatively with Git:
 tauri-plugin-geolocation = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
@@ -73,7 +81,7 @@ The Google Play Store uses this property to decide whether it should show the ap
 
 First you need to register the core plugin with Tauri:
 
-`src-tauri/src/main.rs`
+`src-tauri/src/lib.rs`
 
 ```rust
 fn main() {
@@ -84,19 +92,48 @@ fn main() {
 }
 ```
 
+Then, for instance, grant the plugin the permission to check or request permissions from the user and to read the device position
+
+`src-tauri/capabilities/default.json`
+
+```json
+  "permissions": [
+    "core:default",
+    "geolocation:allow-check-permissions",
+    "geolocation:allow-request-permissions",
+    "geolocation:allow-get-current-position",
+    "geolocation:allow-watch-position",
+  ]
+```
+
 Afterwards all the plugin's APIs are available through the JavaScript guest bindings:
 
 ```javascript
-import { getCurrentPosition, watchPosition } from '@tauri-apps/plugin-log'
+import {
+  checkPermissions,
+  requestPermissions,
+  getCurrentPosition,
+  watchPosition
+} from '@tauri-apps/plugin-geolocation'
 
-const pos = await getCurrentPosition()
+let permissions = await checkPermissions()
+if (
+  permissions.location === 'prompt' ||
+  permissions.location === 'prompt-with-rationale'
+) {
+  permissions = await requestPermissions(['location'])
+}
 
-await watchPosition(
-  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-  (pos) => {
-    console.log(pos)
-  }
-)
+if (permissions.location === 'granted') {
+  const pos = await getCurrentPosition()
+
+  await watchPosition(
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    (pos) => {
+      console.log(pos)
+    }
+  )
+}
 ```
 
 ## Contributing

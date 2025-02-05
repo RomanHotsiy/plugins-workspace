@@ -49,6 +49,11 @@ async function readText(): Promise<string> {
 
 /**
  * Writes image buffer to the clipboard.
+ *
+ * #### Platform-specific
+ *
+ * - **Android / iOS:** Not supported.
+ *
  * @example
  * ```typescript
  * import { writeImage } from '@tauri-apps/plugin-clipboard-manager';
@@ -60,6 +65,7 @@ async function readText(): Promise<string> {
  *   0, 255, 0, 255,
  * ];
  * await writeImage(buffer);
+ * ```
  *
  * @returns A promise indicating the success or failure of the operation.
  *
@@ -75,12 +81,17 @@ async function writeImage(
 
 /**
  * Gets the clipboard content as Uint8Array image.
+ *
+ * #### Platform-specific
+ *
+ * - **Android / iOS:** Not supported.
+ *
  * @example
  * ```typescript
  * import { readImage } from '@tauri-apps/plugin-clipboard-manager';
  *
  * const clipboardImage = await readImage();
- * const blob = new Blob([clipboardImage.bytes], { type: 'image' })
+ * const blob = new Blob([await clipboardImage.rbga()], { type: 'image' })
  * const url = URL.createObjectURL(blob)
  * ```
  * @since 2.0.0
@@ -93,11 +104,18 @@ async function readImage(): Promise<Image> {
 
 /**
  * * Writes HTML or fallbacks to write provided plain text to the clipboard.
+ *
+ * #### Platform-specific
+ *
+ * - **Android / iOS:** Not supported.
+ *
  * @example
  * ```typescript
- * import { writeHtml, readHtml } from '@tauri-apps/plugin-clipboard-manager';
+ * import { writeHtml } from '@tauri-apps/plugin-clipboard-manager';
  * await writeHtml('<h1>Tauri is awesome!</h1>', 'plaintext');
- * await writeHtml('<h1>Tauri is awesome!</h1>', '<h1>Tauri is awesome</h1>'); // Will write "<h1>Tauri is awesome</h1>" as plain text
+ * // The following will write "<h1>Tauri is awesome</h1>" as plain text
+ * await writeHtml('<h1>Tauri is awesome!</h1>', '<h1>Tauri is awesome</h1>');
+ * // we can read html data only as a string so there's just readText(), no readHtml()
  * assert(await readText(), '<h1>Tauri is awesome!</h1>');
  * ```
  *
@@ -105,10 +123,10 @@ async function readImage(): Promise<Image> {
  *
  * @since 2.0.0
  */
-async function writeHtml(html: string, altHtml?: string): Promise<void> {
+async function writeHtml(html: string, altText?: string): Promise<void> {
   await invoke('plugin:clipboard-manager|write_html', {
     html,
-    altHtml
+    altText
   })
 }
 

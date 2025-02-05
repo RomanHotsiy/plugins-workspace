@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-shell"
-version = "2.0.0-rc.3"
+version = "2.2.0"
 description = "Access the system shell. Allows you to spawn child processes and manage files and URLs using their default application."
 edition = { workspace = true }
 authors = { workspace = true }
@@ -13,6 +13,13 @@ links = "tauri-plugin-shell"
 rustc-args = ["--cfg", "docsrs"]
 rustdoc-args = ["--cfg", "docsrs"]
 
+[package.metadata.platforms.support]
+windows = { level = "full", notes = "" }
+linux = { level = "full", notes = "" }
+macos = { level = "full", notes = "" }
+android = { level = "partial", notes = "Only allows to open URLs via `open`" }
+ios = { level = "partial", notes = "Only allows to open URLs via `open`" }
+
 [build-dependencies]
 tauri-plugin = { workspace = true, features = ["build"] }
 schemars = { workspace = true }
@@ -20,7 +27,6 @@ serde = { workspace = true }
 
 [dependencies]
 serde = { workspace = true }
-schemars = { workspace = true }
 serde_json = { workspace = true }
 tauri = { workspace = true }
 tokio = { version = "1", features = ["time"] }

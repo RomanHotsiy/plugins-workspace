@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-//! [![](https://github.com/tauri-apps/plugins-workspace/raw/v2/plugins/window-state/banner.png)](https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/window-state)
-//!
 //! Save window positions and sizes and restore them when the app is reopened.
 
 #![doc(
@@ -29,6 +27,7 @@ use std::{
 mod cmd;
 
 type LabelMapperFn = dyn Fn(&str) -> &str + Send + Sync;
+type FilterCallbackFn = dyn Fn(&str) -> bool + Send + Sync;
 
 /// Default filename used to store window state.
 ///
@@ -105,6 +104,8 @@ impl Default for WindowState {
 }
 
 struct WindowStateCache(Arc<Mutex<HashMap<String, WindowState>>>);
+/// Used to prevent deadlocks from resize and position event listeners setting the cached state on restoring states
+struct RestoringWindowState(Mutex<()>);
 pub trait AppHandleExt {
     /// Saves all open windows state to disk
     fn save_window_state(&self, flags: StateFlags) -> Result<()>;
@@ -167,6 +168,8 @@ impl<R: Runtime> WindowExt for Window<R> {
             .map(|map| map(self.label()))
             .unwrap_or_else(|| self.label());
 
+        let restoring_window_state = self.state::<RestoringWindowState>();
+        let _restoring_window_lock = restoring_window_state.0.lock().unwrap();
         let cache = self.state::<WindowStateCache>();
         let mut c = cache.0.lock().unwrap();
 
@@ -318,6 +321,7 @@ impl<R: Runtime> WindowExtInternal for Window<R> {
 #[derive(Default)]
 pub struct Builder {
     denylist: HashSet<String>,
+    filter_callback: Option<Box<FilterCallbackFn>>,
     skip_initial_state: HashSet<String>,
     state_flags: StateFlags,
     map_label: Option<Box<LabelMapperFn>>,
@@ -342,9 +346,19 @@ impl Builder {
     }
 
     /// Sets a list of windows that shouldn't be tracked and managed by this plugin
-    /// for example splash screen windows.
+    /// For example, splash screen windows.
     pub fn with_denylist(mut self, denylist: &[&str]) -> Self {
         self.denylist = denylist.iter().map(|l| l.to_string()).collect();
+        self
+    }
+
+    /// Sets a filter callback to exclude specific windows from being tracked.  
+    /// Return `true` to save the state, or `false` to skip and not save it.
+    pub fn with_filter<F>(mut self, filter_callback: F) -> Self
+    where
+        F: Fn(&str) -> bool + Send + Sync + 'static,
+    {
+        self.filter_callback = Some(Box::new(filter_callback));
         self
     }
 
@@ -396,6 +410,7 @@ impl Builder {
                         Default::default()
                     };
                 app.manage(WindowStateCache(cache));
+                app.manage(RestoringWindowState(Mutex::new(())));
                 app.manage(PluginState {
                     filename,
                     map_label,
@@ -410,8 +425,17 @@ impl Builder {
                     .map(|map| map(window.label()))
                     .unwrap_or_else(|| window.label());
 
+                // Check deny list names
                 if self.denylist.contains(label) {
                     return;
+                }
+
+                // Check deny list callback
+                if let Some(filter_callback) = &self.filter_callback {
+                    // Don't save the state if the callback returns false
+                    if !filter_callback(label) {
+                        return;
+                    }
                 }
 
                 if !self.skip_initial_state.contains(label) {
@@ -443,7 +467,13 @@ impl Builder {
                     }
 
                     WindowEvent::Moved(position) if flags.contains(StateFlags::POSITION) => {
-                        if !window_clone.is_minimized().unwrap_or_default() {
+                        if window_clone
+                            .state::<RestoringWindowState>()
+                            .0
+                            .try_lock()
+                            .is_ok()
+                            && !window_clone.is_minimized().unwrap_or_default()
+                        {
                             let mut c = cache.lock().unwrap();
                             if let Some(state) = c.get_mut(&label) {
                                 state.prev_x = state.x;
@@ -455,13 +485,28 @@ impl Builder {
                         }
                     }
                     WindowEvent::Resized(size) if flags.contains(StateFlags::SIZE) => {
-                        if !window_clone.is_minimized().unwrap_or_default()
-                            && !window_clone.is_maximized().unwrap_or_default()
+                        if window_clone
+                            .state::<RestoringWindowState>()
+                            .0
+                            .try_lock()
+                            .is_ok()
                         {
-                            let mut c = cache.lock().unwrap();
-                            if let Some(state) = c.get_mut(&label) {
-                                state.width = size.width;
-                                state.height = size.height;
+                            // TODO: Remove once https://github.com/tauri-apps/tauri/issues/5812 is resolved.
+                            let is_maximized = if cfg!(target_os = "macos")
+                                && (!window_clone.is_decorated().unwrap_or_default()
+                                    || !window_clone.is_resizable().unwrap_or_default())
+                            {
+                                false
+                            } else {
+                                window_clone.is_maximized().unwrap_or_default()
+                            };
+
+                            if !window_clone.is_minimized().unwrap_or_default() && !is_maximized {
+                                let mut c = cache.lock().unwrap();
+                                if let Some(state) = c.get_mut(&label) {
+                                    state.width = size.width;
+                                    state.height = size.height;
+                                }
                             }
                         }
                     }

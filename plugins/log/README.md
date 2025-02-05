@@ -2,9 +2,17 @@
 
 Configurable logging for your Tauri app.
 
+| Platform | Supported |
+| -------- | --------- |
+| Linux    | ✓         |
+| Windows  | ✓         |
+| macOS    | ✓         |
+| Android  | ✓         |
+| iOS      | ✓         |
+
 ## Install
 
-_This plugin requires a Rust version of at least **1.75**_
+_This plugin requires a Rust version of at least **1.77.2**_
 
 There are three general methods of installation that we can recommend.
 
@@ -18,7 +26,7 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-tauri-plugin-log = "2.0.0-rc"
+tauri-plugin-log = "2.0.0"
 # alternatively with Git:
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
@@ -46,9 +54,25 @@ yarn add https://github.com/tauri-apps/tauri-plugin-log#v2
 
 ## Usage
 
-First you need to register the core plugin with Tauri:
+First, you should enable the `log:default` capability:
 
-`src-tauri/src/main.rs`
+```json
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "log:default" # add this!
+  ]
+}
+```
+
+Then, you need to register the core plugin with Tauri:
+
+`src-tauri/src/lib.rs`
 
 ```rust
 use tauri_plugin_log::{Target, TargetKind};

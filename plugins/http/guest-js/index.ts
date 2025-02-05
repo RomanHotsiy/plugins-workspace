@@ -92,6 +92,26 @@ export interface ClientOptions {
    * Path to the client private key file (PEM format)
    */
   clientKey?: string
+  /**
+   * Configuration for dangerous settings on the client such as disabling SSL verification.
+   */
+  danger?: DangerousSettings
+}
+
+/**
+ * Configuration for dangerous settings on the client such as disabling SSL verification.
+ *
+ * @since 2.3.0
+ */
+export interface DangerousSettings {
+  /**
+   * Disables SSL verification.
+   */
+  acceptInvalidCerts?: boolean
+  /**
+   * Disables hostname verification.
+   */
+  acceptInvalidHostnames?: boolean
 }
 
 const ERROR_REQUEST_CANCELLED = 'Request canceled'
@@ -123,6 +143,7 @@ export async function fetch(
   const maxRedirections = init?.maxRedirections
   const connectTimeout = init?.connectTimeout
   const proxy = init?.proxy
+  const danger = init?.danger
   const clientCert = init?.clientCert
   const clientKey = init?.clientKey
 
@@ -131,6 +152,7 @@ export async function fetch(
     delete init.maxRedirections
     delete init.connectTimeout
     delete init.proxy
+    delete init.danger
     delete init.clientCert
     delete init.clientKey
   }
@@ -185,6 +207,7 @@ export async function fetch(
       maxRedirections,
       connectTimeout,
       proxy,
+      danger,
       clientCert,
       clientKey
     }

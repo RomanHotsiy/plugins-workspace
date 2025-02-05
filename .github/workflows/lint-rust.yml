@@ -66,6 +66,9 @@ jobs:
             tauri-plugin-global-shortcut:
               - .github/workflows/lint-rust.yml
               - plugins/global-shortcut/**
+            tauri-plugin-opener:
+              - .github/workflows/lint-rust.yml
+              - plugins/opener/**
             tauri-plugin-haptics:
               - .github/workflows/lint-rust.yml
               - plugins/haptics/**
@@ -126,7 +129,7 @@ jobs:
   clippy:
     needs: changes
     if: ${{ needs.changes.outputs.packages != '[]' && needs.changes.outputs.packages != '' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -148,13 +151,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: clippy ${{ matrix.package }}
-        if: matrix.package != 'tauri-plugin-sql'
         run: cargo clippy --package ${{ matrix.package }} --all-targets -- -D warnings
 
-      - name: clippy ${{ matrix.package }} mysql
-        if: matrix.package == 'tauri-plugin-sql'
-        run: cargo clippy --package ${{ matrix.package }} --all-targets --no-default-features --features mysql -- -D warnings
-
-      - name: clippy ${{ matrix.package }} postgres
-        if: matrix.package == 'tauri-plugin-sql'
-        run: cargo clippy --package ${{ matrix.package }} --all-targets --no-default-features --features postgres -- -D warnings
+      - name: clippy ${{ matrix.package }} --all-features
+        run: cargo clippy --package ${{ matrix.package }} --all-targets --all-features -- -D warnings

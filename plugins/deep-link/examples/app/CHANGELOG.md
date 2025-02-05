@@ -1,5 +1,25 @@
 # Changelog
 
+## \[2.2.0]
+
+### Dependencies
+
+- Upgraded to `deep-link-js@2.1.0`
+
+## \[2.0.1]
+
+### Dependencies
+
+- Upgraded to `deep-link-js@2.0.1`
+
+## \[2.0.0]
+
+- [`e2c4dfb6`](https://github.com/tauri-apps/plugins-workspace/commit/e2c4dfb6af43e5dd8d9ceba232c315f5febd55c1) Update to tauri v2 stable release.
+
+### Dependencies
+
+- Upgraded to `deep-link-js@2.0.0`
+
 ## \[2.0.0-rc.1]
 
 ### Dependencies

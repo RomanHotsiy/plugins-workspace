@@ -36,6 +36,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(move |app| {
@@ -55,6 +56,8 @@ pub fn run() {
                 app.handle().plugin(tauri_plugin_barcode_scanner::init())?;
                 app.handle().plugin(tauri_plugin_nfc::init())?;
                 app.handle().plugin(tauri_plugin_biometric::init())?;
+                app.handle().plugin(tauri_plugin_geolocation::init())?;
+                app.handle().plugin(tauri_plugin_haptics::init())?;
             }
 
             let mut webview_window_builder =
@@ -65,7 +68,8 @@ pub fn run() {
                     .user_agent(&format!("Tauri API - {}", std::env::consts::OS))
                     .title("Tauri API Validation")
                     .inner_size(1000., 800.)
-                    .min_inner_size(600., 400.);
+                    .min_inner_size(600., 400.)
+                    .visible(false);
             }
 
             #[cfg(target_os = "windows")]

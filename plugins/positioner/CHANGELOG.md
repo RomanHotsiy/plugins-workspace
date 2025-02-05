@@ -1,5 +1,29 @@
 # Changelog
 
+## \[2.2.0]
+
+- [`3a79266b`](https://github.com/tauri-apps/plugins-workspace/commit/3a79266b8cf96a55b1ae6339d725567d45a44b1d) ([#2173](https://github.com/tauri-apps/plugins-workspace/pull/2173) by [@FabianLars](https://github.com/tauri-apps/plugins-workspace/../../FabianLars)) Bumped all plugins to `v2.2.0`. From now, the versions for the Rust and JavaScript packages of each plugin will be in sync with each other.
+
+## \[2.1.0]
+
+- [`4db62635`](https://github.com/tauri-apps/plugins-workspace/commit/4db626354c8e29e37bedcf94787a8dd36ce21c55) ([#2076](https://github.com/tauri-apps/plugins-workspace/pull/2076) by [@jakobwesthoff](https://github.com/tauri-apps/plugins-workspace/../../jakobwesthoff)) Add `moveWindowConstrained` function that is similar to `moveWindow` but constrains the window to the screen dimensions in case of tray icon positions.
+
+## \[2.0.1]
+
+- [`3c1f3874`](https://github.com/tauri-apps/plugins-workspace/commit/3c1f3874f4c828637b3aa983cba13c77427faf58) ([#1911](https://github.com/tauri-apps/plugins-workspace/pull/1911) by [@lucasfernog](https://github.com/tauri-apps/plugins-workspace/../../lucasfernog)) Added missing permission for `handleIconState` and fixed its event processing logic.
+
+## \[2.0.1]
+
+- [`a1a82208`](https://github.com/tauri-apps/plugins-workspace/commit/a1a82208ed4ab87f83310be0dc95428aec9ab241) ([#1873](https://github.com/tauri-apps/plugins-workspace/pull/1873) by [@lucasfernog](https://github.com/tauri-apps/plugins-workspace/../../lucasfernog)) Downgrade MSRV to 1.77.2 to support Windows 7.
+
+## \[2.0.0]
+
+- [`e2c4dfb6`](https://github.com/tauri-apps/plugins-workspace/commit/e2c4dfb6af43e5dd8d9ceba232c315f5febd55c1) Update to tauri v2 stable release.
+
+## \[2.0.0-rc.2]
+
+- [`2f7e32b5`](https://github.com/tauri-apps/plugins-workspace/commit/2f7e32b5e07454d6c0cf3ab03f8af8da74c4a8a7) ([#1822](https://github.com/tauri-apps/plugins-workspace/pull/1822) by [@jbolda](https://github.com/tauri-apps/plugins-workspace/../../jbolda)) `handleIconState` function for use in JavaScript event handlers. This allows one to update the TrayIcon state through JavaScript and fully create and handle the TrayIcon without requiring Rust (and the side-effect of creating a TrayIcon).
+
 ## \[2.0.0-rc.1]
 
 - [`e2e97db5`](https://github.com/tauri-apps/plugins-workspace/commit/e2e97db51983267f5be84d4f6f0278d58834d1f5) ([#1701](https://github.com/tauri-apps/plugins-workspace/pull/1701) by [@lucasfernog](https://github.com/tauri-apps/plugins-workspace/../../lucasfernog)) Update to tauri 2.0.0-rc.8
@@ -137,19 +161,3 @@
 ## \[0.1.0]
 
 - Update package/crate metadata
-  - [119d9c4](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/119d9c47639e1df16f5520a08f039bdb6f39532b) update metadata on 2021-11-19
-  - [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    data on 2021-11-19
-  - [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    nberg/tauri-plugin-positioner/commit/119d9c47639e1df16f5520a08f039bdb6f39532b) update metadata on 2021-11-19
-  - [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    data on 2021-11-19
-  - [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    data on 2021-11-19
-  - [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    \-19
-    data on 2021-11-19
-  - [39e517c](https://www.github.com/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    m/JonasKruckenberg/tauri-plugin-positioner/commit/39e517c145a4a901839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
-    01839ae9b46e296370ce6ababf) Update update-metadata.md on 2021-11-19
